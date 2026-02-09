@@ -1,24 +1,25 @@
+"use client";
+
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, ArrowDown } from 'lucide-react'; // Importei o ArrowDown
-import { useNavigate } from 'react-router-dom';
+// 1. MUDANÇA: Sai react-router-dom, entra next/navigation
+import { useRouter } from "next/navigation";
+import { ArrowLeft, ArrowDown } from 'lucide-react';
 
 const PageShell = ({ 
   title, 
   description, 
   icon: Icon, 
   iconColorClass = "bg-slate-100 text-slate-600",
-  onMethodologyClick, // <--- NOVA PROP: A função que faz o scroll
+  onMethodologyClick,
   children 
 }) => {
-  const navigate = useNavigate();
+  // 2. MUDANÇA: useNavigate vira useRouter
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 animate-fadeIn">
-      <Helmet>
-        <title>{title} | EnglishUp</title>
-        <meta name="description" content={description} />
-      </Helmet>
+      
+      {/* 3. MUDANÇA: Bloco <Helmet> removido completamente (O SEO está no page.js) */}
 
       <div className="max-w-6xl mx-auto text-center">
         
@@ -37,28 +38,29 @@ const PageShell = ({
           
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button
-              onClick={() => navigate("/", { replace: true })}
+              // 4. MUDANÇA: navigate -> router.push (ou replace)
+              onClick={() => router.push("/")}
               className="bg-white border border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-800 px-6 py-2 rounded-full font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" /> Voltar ao Hub Principal
             </button>
 
-            {/* O botão agora mora aqui dentro! */}
             {onMethodologyClick && (
               <button 
                 onClick={onMethodologyClick}
                 className="bg-white border border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-800 px-6 py-2 rounded-full font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2"
               >
-                <ArrowDown className="w-4 h-4" />
-                Metodologia
+                <ArrowDown className="w-4 h-4" /> Aprender Metodologia
               </button>
             )}
           </div>
         </div>
 
-        <hr className="border-slate-200 mb-8" />
-
-        {children}
+        {/* Conteúdo da Página (Jogos, Textos, etc) */}
+        <div className="text-left">
+          {children}
+        </div>
+        
       </div>
     </div>
   );
