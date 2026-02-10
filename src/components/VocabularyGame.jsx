@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useMemo, useRef, useEffect, useLayoutEffect } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
 import { Helmet } from 'react-helmet-async';
