@@ -1,30 +1,17 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const PrivacyPolicy = () => {
-  const navigate = useNavigate();
-
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 font-sans text-slate-800">
-      
-      {/* --- SEO E METADADOS --- */}
-      <Helmet>
-        <title>Política de Privacidade - EnglishUp</title>
-        <meta 
-          name="description" 
-          content="Política de Privacidade do EnglishUp. Saiba como coletamos dados, utilizamos cookies e gerenciamos a publicidade via Google AdSense." 
-        />
-      </Helmet>
-
       <div className="max-w-3xl mx-auto bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-200">
-        <button 
-          onClick={() => navigate('/')} 
-          className="flex items-center gap-2 text-rose-600 font-bold mb-8 hover:underline"
+        <Link 
+          href="/" 
+          className="flex items-center gap-2 text-rose-600 font-bold mb-8 hover:underline w-fit"
         >
           <ArrowLeft className="w-4 h-4" /> Voltar ao Início
-        </button>
+        </Link>
 
         <h1 className="text-3xl font-black mb-6">Política de Privacidade</h1>
         

@@ -1,30 +1,17 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import Link from 'next/link';
 import { ArrowLeft, GraduationCap, MapPin } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const AboutUs = () => {
-  const navigate = useNavigate();
-
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 font-sans text-slate-800">
-      
-      {/* --- SEO E METADADOS --- */}
-      <Helmet>
-        <title>Sobre o EnglishUp - Quem Somos e Nossa Missão</title>
-        <meta 
-          name="description" 
-          content="Conheça o EnglishUp, uma plataforma 100% gratuita desenvolvida por Artur Brasileiro para ajudar estudantes a aprender inglês sozinhos com jogos rápidos." 
-        />
-      </Helmet>
-
       <div className="max-w-3xl mx-auto bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-200">
-        <button 
-          onClick={() => navigate('/')} 
-          className="flex items-center gap-2 text-rose-600 font-bold mb-8 hover:underline"
+        <Link 
+          href="/" 
+          className="flex items-center gap-2 text-rose-600 font-bold mb-8 hover:underline w-fit"
         >
           <ArrowLeft className="w-4 h-4" /> Voltar ao Início
-        </button>
+        </Link>
 
         <h1 className="text-3xl font-black mb-6">Sobre o EnglishUp</h1>
         

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useRouter } from "next/navigation"; // Mudança 1: Hook do Next.js
+// O useRouter ainda é útil para navegações programáticas, mas para links normais usaremos o <Link>
+import { useRouter } from "next/navigation"; 
 import {
   Gamepad2,
   BrainCircuit,
@@ -11,14 +12,13 @@ import {
   BookOpen
 } from "lucide-react";
 
-// Certifique-se que a imagem está em src/assets/englishup-logo.png
 import logoEnglishUp from "../assets/englishup-logo.png";
+import Image from "next/image";
+import Link from "next/link"; // Importante: Usaremos o Link do Next.js
 
 const HubPage = () => {
-  const router = useRouter(); // Mudança 2: Instância do router
-
+  const router = useRouter(); 
   const [searchTerm, setSearchTerm] = useState("");
-
   const brandName = "EnglishUp";
 
   const games = [
@@ -94,32 +94,24 @@ const HubPage = () => {
   return (
     <div className="min-h-screen text-slate-900 font-sans bg-linear-to-b from-slate-50 via-white to-slate-50 relative overflow-hidden">
       
-      {/* Mudança 3: Removido o <Helmet>. O SEO fica no page.js pai. */}
-
       {/* Blobs leves no fundo */}
       <div className="pointer-events-none absolute -top-24 -left-24 w-72 h-72 bg-indigo-200/40 rounded-full blur-3xl" />
       <div className="pointer-events-none absolute top-40 -right-28 w-80 h-80 bg-emerald-200/35 rounded-full blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-1/3 w-96 h-96 bg-rose-200/25 rounded-full blur-3xl" />
 
-      {/* --- HEADER COM SLOGAN --- */}
+      {/* --- HEADER --- */}
       <nav className="bg-white/70 backdrop-blur border-b border-slate-200 px-4 py-4 shadow-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-center md:justify-start gap-3 md:gap-6">
-          
-          {/* Logo */}
-          <img
-            src={logoEnglishUp.src || logoEnglishUp} // Ajuste para compatibilidade de importação de imagem
+          <Image
+            src={logoEnglishUp}
             alt="EnglishUp"
             className="h-14 md:h-16 w-auto object-contain"
+            priority 
           />
-
-          {/* Divisória Vertical (apenas desktop) */}
           <div className="hidden md:block w-px h-8 bg-slate-300 rounded-full"></div>
-
-          {/* Slogan */}
           <p className="text-slate-500 font-medium text-sm md:text-base tracking-tight text-center md:text-left">
             Treinar inglês nunca foi tão fácil.
           </p>
-
         </div>
       </nav>
 
@@ -131,22 +123,17 @@ const HubPage = () => {
             <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl" />
 
             <div className="flex flex-col md:flex-row gap-8 items-center justify-between relative">
-              
               <div className="flex flex-col items-center md:items-start w-full md:w-auto">
                 <div className="inline-flex items-center gap-2 bg-slate-900 text-white px-3 py-1.5 rounded-full text-xs font-bold tracking-wide shadow-sm">
                   TREINO DIÁRIO • LEVE • EFICIENTE
                 </div>
-
                 <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mt-4 leading-tight tracking-tight text-center md:text-left">
                   Alguns minutos por dia.
                   <span className="text-indigo-600"> Inglês pra vida.</span>
                 </h2>
-
                 <p className="text-center md:text-left text-slate-600 text-base md:text-lg max-w-2xl mt-3">
                   Exercícios rápidos para aprender inglês de graça. Domine a gramática e verbos essenciais com jogos de repetição espaçada.
-                  Simples, direto e sem cadastro.
                 </p>
-
                 <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 mt-5 text-sm text-slate-600">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -165,16 +152,11 @@ const HubPage = () => {
 
               {/* Mini-card */}
               <div className="w-full md:w-85 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Meta rápida
-                </p>
-                <p className="text-xl font-extrabold text-slate-900 mt-1">
-                  15 min por dia
-                </p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Meta rápida</p>
+                <p className="text-xl font-extrabold text-slate-900 mt-1">15 min por dia</p>
                 <p className="text-slate-600 text-sm mt-2 leading-relaxed">
                   Você não precisa estudar muito. Precisa estudar sempre.
                 </p>
-
                 <div className="mt-5 flex items-center justify-between gap-3">
                   <div>
                     <p className="text-xs text-slate-500 font-medium">Treinos disponíveis</p>
@@ -200,61 +182,76 @@ const HubPage = () => {
           </div>
         </div>
 
-        {/* Cards */}
+        {/* --- CARDS DOS JOGOS (CORRIGIDO) --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredGames.length > 0 ? (
-            filteredGames.map((game) => (
-              <div
-                key={game.id}
-                // Mudança 4: router.push no lugar de navigate
-                onClick={() => game.isReady ? router.push(game.path) : null}
-                className={`group bg-white/80 backdrop-blur rounded-3xl border border-slate-200 overflow-hidden transition-all duration-300 flex flex-col cursor-pointer hover:-translate-y-1 hover:shadow-xl ${
-                  !game.isReady ? "opacity-60 grayscale-[0.5]" : ""
-                }`}
-              >
-                <div className={`h-44 ${game.color} flex items-center justify-center text-white relative`}>
-                  {/* badge */}
-                  <div className="absolute top-4 left-4 bg-white/20 border border-white/30 backdrop-blur px-3 py-1 rounded-full text-xs font-extrabold tracking-wide">
-                    {game.badge}
+            filteredGames.map((game) => {
+              
+              // 1. Definimos o conteúdo do card separado para não repetir código
+              const CardContent = (
+                <>
+                  <div className={`h-44 ${game.color} flex items-center justify-center text-white relative`}>
+                    <div className="absolute top-4 left-4 bg-white/20 border border-white/30 backdrop-blur px-3 py-1 rounded-full text-xs font-extrabold tracking-wide">
+                      {game.badge}
+                    </div>
+                    <div className="bg-white/20 p-5 rounded-2xl backdrop-blur-sm group-hover:scale-110 transition-transform duration-300 shadow-sm">
+                      {game.icon}
+                    </div>
                   </div>
 
-                  <div className="bg-white/20 p-5 rounded-2xl backdrop-blur-sm group-hover:scale-110 transition-transform duration-300 shadow-sm">
-                    {game.icon}
-                  </div>
-                </div>
-
-                <div className="p-6 grow flex flex-col">
-                  <div className="mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                      {game.category}
-                    </span>
-                  </div>
-
-                  <h3 className="text-xl font-extrabold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">
-                    {game.title}
-                  </h3>
-
-                  <p className="text-slate-600 text-sm leading-relaxed mb-6 grow">
-                    {game.description}
-                  </p>
-
-                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2.5 h-2.5 rounded-full ${difficultyDot(game.difficulty)}`} />
-                      <span className="text-xs font-bold text-slate-500">{game.difficulty}</span>
+                  <div className="p-6 grow flex flex-col">
+                    <div className="mb-3">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        {game.category}
+                      </span>
                     </div>
 
-                    {game.isReady ? (
-                      <span className="flex items-center gap-1 text-slate-900 font-extrabold text-sm group-hover:translate-x-1 transition-transform">
-                        Jogar <ChevronRight className="w-4 h-4" />
-                      </span>
-                    ) : (
-                      <span className="text-xs text-slate-400 font-medium">Em breve</span>
-                    )}
+                    <h3 className="text-xl font-extrabold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">
+                      {game.title}
+                    </h3>
+
+                    <p className="text-slate-600 text-sm leading-relaxed mb-6 grow">
+                      {game.description}
+                    </p>
+
+                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2.5 h-2.5 rounded-full ${difficultyDot(game.difficulty)}`} />
+                        <span className="text-xs font-bold text-slate-500">{game.difficulty}</span>
+                      </div>
+
+                      {game.isReady ? (
+                        <span className="flex items-center gap-1 text-slate-900 font-extrabold text-sm group-hover:translate-x-1 transition-transform">
+                          Jogar <ChevronRight className="w-4 h-4" />
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-400 font-medium">Em breve</span>
+                      )}
+                    </div>
                   </div>
+                </>
+              );
+
+              // 2. Definimos as classes de estilo
+              const cardClasses = `group bg-white/80 backdrop-blur rounded-3xl border border-slate-200 overflow-hidden transition-all duration-300 flex flex-col ${
+                !game.isReady ? "opacity-60 grayscale-[0.5] cursor-not-allowed" : "cursor-pointer hover:-translate-y-1 hover:shadow-xl"
+              }`;
+
+              // 3. Se estiver pronto, retorna um <Link>. Se não, retorna uma <div>.
+              if (game.isReady) {
+                return (
+                  <Link key={game.id} href={game.path} className={cardClasses}>
+                    {CardContent}
+                  </Link>
+                );
+              }
+
+              return (
+                <div key={game.id} className={cardClasses}>
+                  {CardContent}
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="col-span-full py-20 text-center">
               <div className="bg-white/70 border border-slate-200 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
@@ -268,8 +265,6 @@ const HubPage = () => {
 
       <footer className="bg-white/80 backdrop-blur border-t border-slate-200 pt-10 pb-6">
         <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
-          
-          {/* Lado Esquerdo: Copyright */}
           <div className="text-center md:text-left">
             <p className="text-slate-900 font-bold text-lg">{brandName}</p>
             <p className="text-slate-500 text-sm mt-1">
@@ -277,18 +272,17 @@ const HubPage = () => {
             </p>
           </div>
 
-          {/* Lado Direito: Links Institucionais (Exigência AdSense) */}
+          {/* Links do Footer Atualizados para <Link> */}
           <div className="flex flex-wrap justify-center gap-6 text-sm font-medium text-slate-500">
-            {/* Mudança 5: Atualizado para router.push */}
-            <button onClick={() => router.push('/about')} className="hover:text-indigo-600 transition-colors">
+            <Link href="/about" className="hover:text-indigo-600 transition-colors">
               Sobre Nós
-            </button>
-            <button onClick={() => router.push('/privacy')} className="hover:text-indigo-600 transition-colors">
+            </Link>
+            <Link href="/privacy" className="hover:text-indigo-600 transition-colors">
               Política de Privacidade
-            </button>
-            <button onClick={() => router.push('/contact')} className="hover:text-indigo-600 transition-colors">
+            </Link>
+            <Link href="/contact" className="hover:text-indigo-600 transition-colors">
               Contato
-            </button>
+            </Link>
             <a 
               href="https://github.com/Artur-Brasileiro" 
               target="_blank" 
@@ -300,7 +294,6 @@ const HubPage = () => {
           </div>
         </div>
         
-        {/* Disclamerzinho extra que o Google gosta */}
         <div className="max-w-6xl mx-auto px-4 mt-8 pt-6 border-t border-slate-100 text-center">
           <p className="text-[10px] text-slate-400 uppercase tracking-wider">
             Feito com ❤️ em Minas Gerais, Brasil.
