@@ -1,6 +1,7 @@
+"use client";
+
 import React, { useState, useMemo, useRef, useEffect, useLayoutEffect } from 'react';
-import { useNavigate, useParams } from "react-router-dom";
-import { Helmet } from 'react-helmet-async';
+import { useRouter, useParams } from "next/navigation"; 
 import {
   ArrowRight, Check, X, Trophy, ArrowLeft, PlayCircle,
   CornerDownLeft, BookOpen, ArrowDown
@@ -43,8 +44,10 @@ const isPronunciationMatch = (heardRaw, targetRaw) => {
 };
 
 const VocabularyGame = ({ onBack }) => {
-  const navigate = useNavigate();
-  const { levelId } = useParams();
+  const router = useRouter(); 
+  const params = useParams();
+  const levelId = params?.levelId; 
+
   const { triggerAdBreak } = useH5Ads();
 
   // --- STATES DE DADOS (Assíncrono) ---
@@ -83,6 +86,15 @@ const VocabularyGame = ({ onBack }) => {
   // Ref para a seção de metodologia
   const educationRef = useRef(null);
 
+  // --- EFEITO PARA TÍTULO DA PÁGINA (Substitui o Helmet) ---
+  useEffect(() => {
+    if (view === 'game') {
+      document.title = `Nível ${currentLevelId} - EnglishUp`;
+    } else {
+      document.title = 'Treino de Vocabulário Diário | EnglishUp';
+    }
+  }, [currentLevelId, view]);
+
   // --- CARREGAMENTO DE DADOS ---
   useEffect(() => {
     loadGameData('vocabulary.json')
@@ -99,7 +111,7 @@ const VocabularyGame = ({ onBack }) => {
 
   // --- AUDIO HELPER ---
   const stopAllAudio = () => {
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
     setIsSpeaking(false);
     if (recognitionRef.current) recognitionRef.current.abort();
     setIsListening(false);
@@ -110,7 +122,7 @@ const VocabularyGame = ({ onBack }) => {
     triggerAdBreak('next', 'return_menu', () => {
         stopAllAudio();
         setView('menu');
-        navigate('/vocabulary', { replace: true });
+        router.replace('/vocabulary'); 
     }, stopAllAudio);
   };
 
@@ -150,7 +162,7 @@ const VocabularyGame = ({ onBack }) => {
   const currentWord = currentLevelWords[currentWordIndex];
 
   useEffect(() => {
-    if (!feedback && view === 'game' && window.innerWidth >= 768) {
+    if (!feedback && view === 'game' && typeof window !== 'undefined' && window.innerWidth >= 768) {
         inputRef.current?.focus();
     }
   }, [currentWordIndex, feedback, view]);
@@ -167,7 +179,7 @@ const VocabularyGame = ({ onBack }) => {
   };
 
   const restartLevelInternal = () => {
-    setView('game'); // <--- ADICIONE ESTA LINHA
+    setView('game'); 
     restartInternalState();
     window.scrollTo(0, 0);
   };
@@ -255,7 +267,7 @@ const VocabularyGame = ({ onBack }) => {
   // --- AUDIO LOGIC ---
   const speakCurrentWord = () => {
     if (!currentWord?.en) return;
-    if (!window.speechSynthesis) return setPronunciationError('Erro áudio');
+    if (typeof window !== 'undefined' && !window.speechSynthesis) return setPronunciationError('Erro áudio');
     
     const utterance = new SpeechSynthesisUtterance(currentWord.en);
     utterance.lang = 'en-US';
@@ -270,7 +282,7 @@ const VocabularyGame = ({ onBack }) => {
 
   const startPronunciationCheck = () => {
     if (!currentWord?.en) return;
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
     if (!SpeechRecognition) return setPronunciationError('Navegador não suporta');
 
     if (recognitionRef.current) recognitionRef.current.abort();
@@ -280,7 +292,7 @@ const VocabularyGame = ({ onBack }) => {
     recognition.interimResults = false;
     recognition.maxAlternatives = 5;
 
-    const SpeechGrammarList = window.SpeechGrammarList || window.webkitSpeechGrammarList;
+    const SpeechGrammarList = typeof window !== 'undefined' && (window.SpeechGrammarList || window.webkitSpeechGrammarList);
     if (SpeechGrammarList) {
       try {
         const grammar = `#JSGF V1.0; grammar words; public <word> = ${currentWord.en};`;
@@ -349,14 +361,14 @@ const VocabularyGame = ({ onBack }) => {
         description={`O jogo ideal para treinar seu vocabulário e aprender as palavras mais usadas do inglês. São ${data.length} termos essenciais divididos em ${totalLevels} níveis.`}
         icon={BookOpen}
         iconColorClass="bg-rose-100 text-rose-600"
-        onMethodologyClick={scrollToEducation} // <--- SÓ PASSAR A FUNÇÃO AQUI
+        onMethodologyClick={scrollToEducation} 
       >
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-12">
             {levelsArray.map((levelId) => (
               <div
                 key={levelId}
-                onClick={() => navigate(`/vocabulary/level/${levelId}`)} 
+                onClick={() => router.push(`/vocabulary/level/${levelId}`)} 
                 className="group bg-white rounded-xl border border-slate-200 p-5 hover:shadow-lg hover:border-rose-300 transition-all duration-300 cursor-pointer relative overflow-hidden"
               >
                 <div className="relative z-10 flex justify-between items-center">
@@ -409,7 +421,7 @@ const VocabularyGame = ({ onBack }) => {
         
         {currentLevelId < totalLevels && (
              <button
-                onClick={() => triggerAdBreak('next', `level_complete_${currentLevelId}`, () => navigate(`/vocabulary/level/${currentLevelId + 1}`), stopAllAudio)}
+                onClick={() => triggerAdBreak('next', `level_complete_${currentLevelId}`, () => router.push(`/vocabulary/level/${currentLevelId + 1}`), stopAllAudio)}
                 className="w-full bg-rose-600 text-white py-3.5 rounded-xl font-bold hover:bg-rose-700 transition-colors shadow-lg flex items-center justify-center gap-2 mb-3"
               >
                 Próximo Nível <ArrowRight className="w-4 h-4" />
@@ -432,9 +444,7 @@ const VocabularyGame = ({ onBack }) => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col items-center">
-      <Helmet>
-        <title>{`Nível ${currentLevelId} - EnglishUp`}</title> 
-      </Helmet>
+      {/* Removido: <Helmet><title>...</title></Helmet> */}
       
       {/* HEADER AD */}
       <div className="w-full bg-white border-b border-slate-200 py-2 flex flex-col items-center justify-center relative z-20 shadow-sm min-h-25 md:min-h-27.5">         

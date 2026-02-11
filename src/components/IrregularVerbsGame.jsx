@@ -1,13 +1,16 @@
+'use client'; // <--- OBRIGATÓRIO PARA COMPONENTES COM STATE NO NEXT.JS APP ROUTER
+
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { useNavigate, useParams } from "react-router-dom";
-import { Helmet } from 'react-helmet-async';
+// MUDANÇA: Trocamos react-router-dom por next/navigation
+import { useRouter, useParams } from "next/navigation"; 
+// import { Helmet } from 'react-helmet-async'; // Next.js usa Metadata API, pode remover o Helmet se quiser, ou manter se tiver um wrapper.
+
 import {
   Gamepad2, ToggleLeft, ToggleRight, Layers, ArrowLeft,
   ArrowRight as ArrowRightIcon, CheckCircle, XCircle, Trophy
 } from 'lucide-react';
 
 import { loadGameData } from '../utils/dataLoader';
-
 import AdUnit from './ads/AdUnit';
 import { useH5Ads } from '../hooks/useH5Ads';
 import PageShell from './layout/PageShell';
@@ -19,15 +22,17 @@ import { shuffleArray } from '../utils/arrayUtils';
 const ITEMS_PER_PHASE = 10;
 
 const IrregularVerbsGame = ({ onBack }) => {
-  const navigate = useNavigate();
-  const { levelId } = useParams();
+  // MUDANÇA: useNavigate vira useRouter
+  const router = useRouter(); 
+  const params = useParams(); // Next.js useParams retorna o objeto direto
+  const levelId = params?.levelId; // Acessa o parametro de forma segura
+
   const { triggerAdBreak } = useH5Ads();
   
   // --- STATE ---
   const firstInputRef = useRef(null);
-  const educationRef = useRef(null); // 1. Ref para a metodologia
+  const educationRef = useRef(null);
 
-  // States de Dados Assíncronos
   const [data, setData] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,7 +43,6 @@ const IrregularVerbsGame = ({ onBack }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [phaseQuestions, setPhaseQuestions] = useState([]);
   
-  // Configuração dos modos
   const [selectedModes, setSelectedModes] = useState({
     presente: true,
     passado: true,
@@ -53,7 +57,6 @@ const IrregularVerbsGame = ({ onBack }) => {
 
   const [feedback, setFeedback] = useState(null);
   
-  // Total de fases agora depende do data carregado
   const totalPhases = data.length > 0 ? Math.ceil(data.length / ITEMS_PER_PHASE) : 0;
 
   // --- EFFECT: Carregar Dados ---
@@ -70,10 +73,9 @@ const IrregularVerbsGame = ({ onBack }) => {
       });
   }, []);
 
-  // --- AUDIO CONTROL ---
   const stopAllAudio = () => { 
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    if (typeof window.stopListening === 'function') window.stopListening();
+    if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
+    if (typeof window !== 'undefined' && typeof window.stopListening === 'function') window.stopListening();
   };
 
   // --- NAVIGATION ---
@@ -81,20 +83,20 @@ const IrregularVerbsGame = ({ onBack }) => {
     triggerAdBreak('next', 'return_menu', () => {
         stopAllAudio();
         setView('menu');
-        navigate('/irregular', { replace: true });
+        // MUDANÇA: router.replace do Next.js
+        router.replace('/irregular'); 
     }, stopAllAudio);
   };
 
   // --- LOGICA DE ROTA ---
   useLayoutEffect(() => {
-    // Só processa a rota se os dados já chegaram
     if (!loading && data.length > 0) {
       if (levelId) {
         const phaseNum = parseInt(levelId, 10);
         if (!isNaN(phaseNum) && phaseNum > 0 && phaseNum <= totalPhases) {
             startGame(phaseNum);
         } else {
-            navigate('/irregular', { replace: true });
+            router.replace('/irregular');
         }
       } else {
         setView('menu');
@@ -103,12 +105,11 @@ const IrregularVerbsGame = ({ onBack }) => {
   }, [levelId, loading, totalPhases]); 
 
   useEffect(() => {
-    if (view === 'game' && !feedback && firstInputRef.current && window.innerWidth >= 768) {
+    if (view === 'game' && !feedback && firstInputRef.current && typeof window !== 'undefined' && window.innerWidth >= 768) {
       setTimeout(() => firstInputRef.current?.focus(), 50);
     }
   }, [currentQuestionIndex, view, feedback]);
 
-  // 2. Função de Scroll
   const scrollToEducation = () => {
     if (educationRef.current) {
       educationRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -129,7 +130,7 @@ const IrregularVerbsGame = ({ onBack }) => {
     const originalQuestions = data.slice(startIndex, endIndex); 
     
     if (originalQuestions.length === 0) {
-        navigate('/irregular', { replace: true });
+        router.replace('/irregular');
         return;
     }
 
@@ -138,7 +139,7 @@ const IrregularVerbsGame = ({ onBack }) => {
     setScore(0);
     initializeInputs();
     setView('game');
-    window.scrollTo(0,0);
+    if (typeof window !== 'undefined') window.scrollTo(0,0);
   };
 
   const initializeInputs = () => {
@@ -151,7 +152,8 @@ const IrregularVerbsGame = ({ onBack }) => {
         alert('Selecione pelo menos um tempo verbal para treinar!');
         return;
       }
-      navigate(`/irregular/level/${phaseNum}`);
+      // MUDANÇA: router.push
+      router.push(`/irregular/level/${phaseNum}`);
   };
 
   const handleInputChange = (field, value) => {
@@ -240,7 +242,6 @@ const IrregularVerbsGame = ({ onBack }) => {
 
   // ================= RENDER =================
 
-  // 0. LOADING
   if (loading) {
     return (
       <PageShell title="Irregular Verbs Challenge" icon={Gamepad2} iconColorClass="bg-orange-100 text-orange-600">
@@ -264,7 +265,7 @@ const IrregularVerbsGame = ({ onBack }) => {
         description="Decore a tabela de verbos irregulares de uma vez por todas. Treine Past Simple e Participle e pare de travar na hora de falar."
         icon={Gamepad2}
         iconColorClass="bg-orange-100 text-orange-600"
-        onMethodologyClick={scrollToEducation} // 3. Passando a função
+        onMethodologyClick={scrollToEducation}
       >
           {/* Seletor de Modos */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-lg mx-auto mb-12">
@@ -323,7 +324,6 @@ const IrregularVerbsGame = ({ onBack }) => {
             )}
           </div>
           
-          {/* 4. Wrapper da Ref */}
           <div ref={educationRef}>
              <IrregularVerbsEducation />
           </div>
@@ -331,7 +331,7 @@ const IrregularVerbsGame = ({ onBack }) => {
     );
   }
 
-  // 2. RESULTADO (MANTIDO IGUAL)
+  // 2. RESULTADO
   if (view === 'result') {
     const activeModesCount = Object.values(selectedModes).filter(Boolean).length;
     const maxScore = phaseQuestions.length * activeModesCount;
@@ -356,10 +356,6 @@ const IrregularVerbsGame = ({ onBack }) => {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col items-center">
       
-      <Helmet>
-        <title>{`Fase ${activePhase} | Irregular Verbs - EnglishUp`}</title>
-      </Helmet>
-
       {/* HEADER AD */}
       <div className="w-full bg-white border-b border-slate-200 py-2 flex flex-col items-center justify-center relative z-20 shadow-sm min-h-25">
          <div className="block md:hidden"><AdUnit key={`mob-top`} slotId="8330331714" width="320px" height="100px" label="Patrocinado"/></div>
@@ -429,7 +425,6 @@ const IrregularVerbsGame = ({ onBack }) => {
                 </div>
               </div>
 
-             {/* MUDANÇA AQUI: Força 1 coluna dentro do jogo */}
              <IrregularVerbsEducation forceSingleColumn={true} />
 
              <div className="mt-12 pointer-events-auto flex flex-col items-center">

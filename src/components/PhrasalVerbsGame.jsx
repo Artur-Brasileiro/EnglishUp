@@ -1,13 +1,13 @@
+'use client';
+
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { useNavigate, useParams } from "react-router-dom";
-import { Helmet } from 'react-helmet-async';
+import { useRouter, useParams } from "next/navigation";
 import { 
   BrainCircuit, Layers, ArrowLeft, ArrowRight, 
   CheckCircle, XCircle, HelpCircle, Lightbulb
 } from 'lucide-react';
 
 import { loadGameData } from '../utils/dataLoader';
-
 import AdUnit from './ads/AdUnit';
 import { useH5Ads } from '../hooks/useH5Ads';
 import PageShell from './layout/PageShell';
@@ -19,15 +19,16 @@ import { shuffleArray } from '../utils/arrayUtils';
 const ITEMS_PER_PHASE = 10;
 
 const PhrasalVerbsGame = ({ onBack }) => {
-  const navigate = useNavigate();
-  const { levelId } = useParams();
+  const router = useRouter();
+  const params = useParams();
+  const levelId = params?.levelId;
+
   const { triggerAdBreak } = useH5Ads();
 
   // --- REFS & STATES ---
   const firstInputRef = useRef(null);
-  const educationRef = useRef(null); // 1. Ref para a metodologia
+  const educationRef = useRef(null);
   
-  // States de Dados Assíncronos
   const [data, setData] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -57,10 +58,19 @@ const PhrasalVerbsGame = ({ onBack }) => {
       });
   }, []);
 
+  // --- EFFECT: Título Dinâmico (Substituto do Helmet) ---
+  useEffect(() => {
+    if (view === 'game') {
+      document.title = `Fase ${activePhase} | Phrasal Verbs - EnglishUp`;
+    } else {
+      document.title = 'Phrasal Verbs Master | EnglishUp';
+    }
+  }, [activePhase, view]);
+
   // --- AUDIO CONTROL ---
   const stopAllAudio = () => {
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    if (typeof window.stopListening === 'function') window.stopListening();
+    if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
+    if (typeof window !== 'undefined' && typeof window.stopListening === 'function') window.stopListening();
   };
 
   // --- NAVIGATION ---
@@ -68,7 +78,7 @@ const PhrasalVerbsGame = ({ onBack }) => {
     triggerAdBreak('next', 'return_menu', () => {
         stopAllAudio();
         setView('menu');
-        navigate('/phrasal', { replace: true });
+        router.replace('/phrasal');
     }, stopAllAudio);
   };
 
@@ -80,7 +90,7 @@ const PhrasalVerbsGame = ({ onBack }) => {
         if (!isNaN(phaseNum) && phaseNum > 0 && phaseNum <= totalPhases) {
             startGame(phaseNum);
         } else {
-            navigate('/phrasal', { replace: true });
+            router.replace('/phrasal');
         }
       } else {
         setView('menu');
@@ -90,12 +100,11 @@ const PhrasalVerbsGame = ({ onBack }) => {
   }, [levelId, loading, totalPhases]); 
 
   useEffect(() => {
-    if (view === 'game' && !feedback && firstInputRef.current && window.innerWidth >= 768) {
+    if (view === 'game' && !feedback && firstInputRef.current && typeof window !== 'undefined' && window.innerWidth >= 768) {
       setTimeout(() => firstInputRef.current?.focus(), 50);
     }
   }, [currentQuestionIndex, view, feedback]);
 
-  // 2. Função de Scroll
   const scrollToEducation = () => {
     if (educationRef.current) {
       educationRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -112,7 +121,7 @@ const PhrasalVerbsGame = ({ onBack }) => {
     const originalQuestions = data.slice(startIndex, endIndex); 
     
     if (originalQuestions.length === 0) {
-      navigate('/phrasal', { replace: true });
+      router.replace('/phrasal');
       return;
     }
 
@@ -126,7 +135,7 @@ const PhrasalVerbsGame = ({ onBack }) => {
     if (shuffledQuestions.length > 0) {
       initializeInputs(shuffledQuestions[0]);
     }
-    window.scrollTo(0,0);
+    if (typeof window !== 'undefined') window.scrollTo(0,0);
   };
 
   const initializeInputs = (verbData) => {
@@ -198,7 +207,7 @@ const PhrasalVerbsGame = ({ onBack }) => {
         description="Pare de traduzir ao pé da letra. Aprenda os phrasal verbs essenciais para entender filmes, séries e conversas reais em inglês."
         icon={BrainCircuit}
         iconColorClass="bg-indigo-100 text-indigo-600"
-        onMethodologyClick={scrollToEducation} // 3. Passando a função
+        onMethodologyClick={scrollToEducation}
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
             {totalPhases > 0 ? (
@@ -207,7 +216,7 @@ const PhrasalVerbsGame = ({ onBack }) => {
                 return (
                   <button 
                     key={phaseNum} 
-                    onClick={() => navigate(`/phrasal/level/${phaseNum}`)} 
+                    onClick={() => router.push(`/phrasal/level/${phaseNum}`)} 
                     className="group relative bg-white border border-slate-200 rounded-2xl p-6 hover:border-indigo-500 hover:shadow-xl transition-all duration-300 text-left"
                   >
                     <div className="flex justify-between items-start mb-4">
@@ -233,7 +242,6 @@ const PhrasalVerbsGame = ({ onBack }) => {
             )}
         </div>
         
-        {/* 4. Wrapper com Ref */}
         <div ref={educationRef}>
             <PhrasalVerbsEducation />
         </div>
@@ -268,9 +276,7 @@ const PhrasalVerbsGame = ({ onBack }) => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col items-center">
-      <Helmet>
-        <title>{`Fase ${activePhase} | Phrasal Verbs - EnglishUp`}</title>
-      </Helmet>
+      {/* REMOVIDO: <Helmet> ... </Helmet> */}
 
       {/* HEADER AD */}
       <div className="w-full bg-white border-b border-slate-200 py-2 flex flex-col items-center justify-center relative z-20 shadow-sm min-h-25">
@@ -380,7 +386,6 @@ const PhrasalVerbsGame = ({ onBack }) => {
                 </div>
              </div>
              
-             {/* MUDANÇA AQUI: forçar 1 coluna dentro do jogo */}
              <PhrasalVerbsEducation forceSingleColumn={true} />
 
              <div className="mt-12 pointer-events-auto flex flex-col items-center">

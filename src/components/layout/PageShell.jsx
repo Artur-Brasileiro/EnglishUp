@@ -1,24 +1,29 @@
-import React from 'react';
-import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, ArrowDown } from 'lucide-react'; // Importei o ArrowDown
-import { useNavigate } from 'react-router-dom';
+"use client";
+
+import React, { useEffect } from 'react';
+// Removido: import { Helmet } from 'react-helmet-async';
+import { ArrowLeft, ArrowDown } from 'lucide-react'; 
+import { useRouter } from 'next/navigation'; // Trocamos react-router-dom por next/navigation
 
 const PageShell = ({ 
   title, 
   description, 
   icon: Icon, 
   iconColorClass = "bg-slate-100 text-slate-600",
-  onMethodologyClick, // <--- NOVA PROP: A função que faz o scroll
+  onMethodologyClick, 
   children 
 }) => {
-  const navigate = useNavigate();
+  // Inicializa o router do Next.js
+  const router = useRouter();
+
+  // Substitui o Helmet para atualizar o título da aba
+  useEffect(() => {
+    document.title = `${title} | EnglishUp`;
+  }, [title]);
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 animate-fadeIn">
-      <Helmet>
-        <title>{title} | EnglishUp</title>
-        <meta name="description" content={description} />
-      </Helmet>
+      {/* Helmet removido - o título é gerenciado pelo useEffect acima e metadata do Next.js */}
 
       <div className="max-w-6xl mx-auto text-center">
         
@@ -37,13 +42,12 @@ const PageShell = ({
           
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button
-              onClick={() => navigate("/", { replace: true })}
+              onClick={() => router.replace("/")} // navigate(..., { replace: true }) vira router.replace
               className="bg-white border border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-800 px-6 py-2 rounded-full font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" /> Voltar ao Hub Principal
             </button>
 
-            {/* O botão agora mora aqui dentro! */}
             {onMethodologyClick && (
               <button 
                 onClick={onMethodologyClick}
